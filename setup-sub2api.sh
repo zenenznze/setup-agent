@@ -2,10 +2,11 @@
 set -euo pipefail
 
 # ============================================================
-# 一键配置脚本：Sub2API (Claude Code / CodeX)
+# 一键配置脚本：Sub2API (Claude Code / CodeX / Grok Build)
 # 请求地址: https://sub2api.joe.heiyu.space
 # Claude Code: ~/.claude/settings.json
 # CodeX:       ~/.codex/auth.json + ~/.codex/config.toml
+# Grok Build:  ~/.grok/config.toml
 # ============================================================
 
 RED='\033[0;31m'
@@ -128,7 +129,8 @@ echo ""
 echo "请选择要配置的工具:"
 echo "  1) Claude Code（DeepSeek v4 模型）"
 echo "  2) CodeX（GPT-5.5 模型）"
-read -rp "输入 1 或 2 [1]: " CHOICE
+echo "  3) Grok Build（grok-4.5 模型）"
+read -rp "输入 1-3 [1]: " CHOICE
 CHOICE="${CHOICE:-1}"
 
 case "$CHOICE" in
@@ -139,6 +141,10 @@ case "$CHOICE" in
   2|codex|CodeX)
     TOOL="codex"
     TOOL_NAME="CodeX"
+    ;;
+  3|grok|Grok)
+    TOOL="grok"
+    TOOL_NAME="Grok Build"
     ;;
   *)
     err "无效选择: $CHOICE"
@@ -154,9 +160,12 @@ echo ""
 if [[ "$TOOL" == "claude" ]]; then
   KEY_NAME="Sub2API API Key"
   KEY_DESC="在 Sub2API 后台创建 API Key，选择 Anthropic 分组"
-else
+elif [[ "$TOOL" == "codex" ]]; then
   KEY_NAME="Sub2API API Key"
   KEY_DESC="在 Sub2API 后台创建 API Key，选择 OpenAI 分组"
+else
+  KEY_NAME="Sub2API API Key"
+  KEY_DESC="在 Sub2API 后台创建 API Key，选择 Grok 分组"
 fi
 
 info "${KEY_DESC}"
@@ -215,7 +224,7 @@ EOF
 
   log "全部完成！新开一个终端，输入 claude 即可使用。"
 
-else
+elif [[ "$TOOL" == "codex" ]]; then
   # ---- 3b. 配置 CodeX ----
   cleanup_codex_env
   check_residue 'OPENAI_API_KEY|CODEX_HOME' "CodeX"
@@ -280,4 +289,54 @@ EOF
   echo ""
   log "全部完成！新开一个终端，输入 codex 即可使用。"
   log "提供商: Sub2API (${BASE_URL})，模型: gpt-5.5"
+
+else
+  # ---- 3c. 配置 Grok Build ----
+  GROK_CONFIG="$HOME/.grok/config.toml"
+  GROK_BASE_URL="https://sub2api.joe.heiyu.space/v1"
+
+  info "写入 Grok Build 配置文件: $GROK_CONFIG ..."
+  mkdir -p "$HOME/.grok"
+
+  cat > "$GROK_CONFIG" <<EOF
+[cli]
+installer = "internal"
+
+[models]
+default = "grok"
+web_search = "grok"
+
+[model."grok"]
+model = "grok-4.5"
+base_url = "${GROK_BASE_URL}"
+name = "Grok 4.5"
+api_key = "${API_KEY}"
+api_backend = "responses"
+context_window = 1000000
+supports_backend_search = true
+
+[marketplace]
+default_skills_installs_purged = true
+EOF
+
+  chmod 600 "$GROK_CONFIG"
+  log "$GROK_CONFIG 已创建"
+
+  echo ""
+  echo "============================================"
+  echo " 配置完成，验证如下:"
+  echo "============================================"
+  echo "配置文件       = $GROK_CONFIG"
+  echo "BASE_URL       = ${GROK_BASE_URL}"
+  echo "API Key        = $(mask_secret "$API_KEY")"
+  echo "模型           = grok-4.5"
+  echo ""
+  echo "验证命令:"
+  echo "  grok inspect"
+  echo "  grok models"
+  echo "  grok -p \"你好\""
+
+  echo ""
+  log "全部完成！新开一个终端，输入 grok 即可使用。"
+  log "提供商: Sub2API (${GROK_BASE_URL})，模型: grok-4.5"
 fi

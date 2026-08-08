@@ -12,7 +12,7 @@ chmod +x setup.sh
 
 `setup.sh` 是统一入口，交互式引导完成配置：
 
-1. **选择工具** — Claude Code 或 CodeX
+1. **选择工具** — Claude Code、CodeX 或 Grok Build
 2. **选择提供商** — 根据工具列出可用目标
 3. **输入 API Key** — 自动写入对应配置文件
 
@@ -24,6 +24,7 @@ chmod +x setup.sh
 | Claude Code | Sub2API 自建网关 | `https://sub2api.joe.heiyu.space` |
 | CodeX | tuzi | `https://api.tu-zi.com/coding` |
 | CodeX | Sub2API 自建网关 | `https://sub2api.joe.heiyu.space` |
+| Grok Build | Sub2API 自建网关 | `https://sub2api.joe.heiyu.space/v1` |
 
 ## 独立专项脚本
 
@@ -32,7 +33,7 @@ chmod +x setup.sh
 | 脚本 | 用途 | API 地址 |
 |------|------|----------|
 | `setup-deepseek.sh` | Claude Code → DeepSeek 直连 | `https://api.deepseek.com/anthropic` |
-| `setup-sub2api.sh` | Claude Code / CodeX → Sub2API | `https://sub2api.joe.heiyu.space` |
+| `setup-sub2api.sh` | Claude Code / CodeX / Grok Build → Sub2API | `https://sub2api.joe.heiyu.space` |
 | `setup-codex-tuzi.sh` | CodeX → tuzi | `https://api.tu-zi.com/coding` |
 
 ## 配置 Claude Code
@@ -120,6 +121,41 @@ codex exec "hello"
 
 - `base_url`: `https://sub2api.joe.heiyu.space`
 - 需要在 Sub2API 后台创建 API Key，选择 **OpenAI 分组**
+
+## 配置 Grok Build
+
+写入 `~/.grok/config.toml`，请求地址指向 Sub2API 自建网关：
+
+```toml
+[cli]
+installer = "internal"
+
+[models]
+default = "grok"
+web_search = "grok"
+
+[model."grok"]
+model = "grok-4.5"
+base_url = "https://sub2api.joe.heiyu.space/v1"
+name = "Grok 4.5"
+api_key = "<你的 API Key>"
+api_backend = "responses"
+context_window = 1000000
+supports_backend_search = true
+
+[marketplace]
+default_skills_installs_purged = true
+```
+
+- `base_url` 带 `/v1`：Grok CLI 使用 `api_backend = "responses"` 时会请求 `https://sub2api.joe.heiyu.space/v1/responses`，对应 Sub2API 的 OpenAI Responses 网关端点
+- 需要在 Sub2API 后台创建 API Key，选择 **Grok 分组**
+
+验证命令：
+```bash
+grok inspect
+grok models
+grok -p "你好"
+```
 
 ## 设计原则
 

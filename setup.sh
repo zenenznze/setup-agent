@@ -2,9 +2,10 @@
 set -euo pipefail
 
 # ============================================================
-# 统一配置入口 — Claude Code / CodeX 多提供商支持
+# 统一配置入口 — Claude Code / CodeX / Grok Build 多提供商支持
 # Claude Code: ~/.claude/settings.json
 # CodeX:       ~/.codex/auth.json + ~/.codex/config.toml
+# Grok Build:  ~/.grok/config.toml
 # 交互式：先选工具，再选提供商
 # ============================================================
 
@@ -36,6 +37,7 @@ declare -A PROVIDER_URL
 PROVIDER_URL["deepseek:claude"]="https://api.deepseek.com/anthropic"
 PROVIDER_URL["sub2api:claude"]="https://sub2api.joe.heiyu.space"
 PROVIDER_URL["sub2api:codex"]="https://sub2api.joe.heiyu.space"
+PROVIDER_URL["sub2api:grok"]="https://sub2api.joe.heiyu.space/v1"
 PROVIDER_URL["tuzi:codex"]="https://api.tu-zi.com/coding"
 
 mask_secret() {
@@ -135,7 +137,8 @@ echo ""
 echo "请选择要配置的工具:"
 echo "  1) Claude Code（DeepSeek 模型）"
 echo "  2) CodeX（gpt-5.6-luna 模型）"
-read -rp "输入 1 或 2 [1]: " TOOL_CHOICE
+echo "  3) Grok Build（grok-4.5 模型）"
+read -rp "输入 1-3 [1]: " TOOL_CHOICE
 TOOL_CHOICE="${TOOL_CHOICE:-1}"
 
 case "$TOOL_CHOICE" in
@@ -146,6 +149,10 @@ case "$TOOL_CHOICE" in
   2|codex|CodeX)
     TOOL="codex"
     TOOL_NAME="CodeX"
+    ;;
+  3|grok|Grok)
+    TOOL="grok"
+    TOOL_NAME="Grok Build"
     ;;
   *)
     err "无效选择: $TOOL_CHOICE"
@@ -160,7 +167,13 @@ echo ""
 # ============================================================
 # 第 2 步：选择提供商
 # ============================================================
-if [[ "$TOOL" == "claude" ]]; then
+if [[ "$TOOL" == "grok" ]]; then
+  echo "  Grok Build → Sub2API 自建网关（sub2api.joe.heiyu.space）"
+  PROVIDER="sub2api"
+  BASE_URL="${PROVIDER_URL["sub2api:grok"]}"
+  KEY_NAME="Sub2API API Key"
+  PROVIDER_LABEL="Sub2API"
+elif [[ "$TOOL" == "claude" ]]; then
   echo "请选择 API 提供商:"
   echo "  1) DeepSeek 直连（api.deepseek.com）"
   echo "  2) Sub2API 自建网关（sub2api.joe.heiyu.space）"
@@ -232,6 +245,8 @@ if [[ "$TOOL" == "claude" && "$PROVIDER" == "sub2api" ]]; then
   info "Sub2API 后台创建 API Key，选择 Anthropic 分组"
 elif [[ "$TOOL" == "codex" && "$PROVIDER" == "sub2api" ]]; then
   info "Sub2API 后台创建 API Key，选择 OpenAI 分组"
+elif [[ "$TOOL" == "grok" ]]; then
+  info "Sub2API 后台创建 API Key，选择 Grok 分组"
 fi
 
 read -rsp "请输入你的 ${KEY_NAME}: " API_KEY
@@ -298,7 +313,7 @@ EOF
 
   log "全部完成！新开一个终端，输入 claude 即可使用。"
 
-else
+elif [[ "$TOOL" == "codex" ]]; then
   # ---- 配置 CodeX ----
   cleanup_codex_env
   check_residue 'OPENAI_API_KEY|CODEX_HOME' "CodeX"
@@ -364,4 +379,54 @@ EOF
   echo ""
   log "全部完成！新开一个终端，输入 codex 即可使用。"
   log "提供商: ${PROVIDER_LABEL}（${BASE_URL}），模型: gpt-5.6-luna"
+
+else
+  # ---- 配置 Grok Build ----
+  GROK_CONFIG="$HOME/.grok/config.toml"
+
+  info "写入 Grok Build 配置文件: $GROK_CONFIG ..."
+  mkdir -p "$HOME/.grok"
+
+  cat > "$GROK_CONFIG" <<EOF
+[cli]
+installer = "internal"
+
+[models]
+default = "grok"
+web_search = "grok"
+
+[model."grok"]
+model = "grok-4.5"
+base_url = "${BASE_URL}"
+name = "Grok 4.5"
+api_key = "${API_KEY}"
+api_backend = "responses"
+context_window = 1000000
+supports_backend_search = true
+
+[marketplace]
+default_skills_installs_purged = true
+EOF
+
+  chmod 600 "$GROK_CONFIG"
+  log "$GROK_CONFIG 已创建"
+
+  echo ""
+  echo "============================================"
+  echo " 配置完成，验证如下:"
+  echo "============================================"
+  echo "配置文件       = $GROK_CONFIG"
+  echo "提供商         = ${PROVIDER_LABEL}"
+  echo "BASE_URL       = ${BASE_URL}"
+  echo "API Key        = $(mask_secret "$API_KEY")"
+  echo "模型           = grok-4.5"
+  echo ""
+  echo "验证命令:"
+  echo "  grok inspect"
+  echo "  grok models"
+  echo "  grok -p \"你好\""
+
+  echo ""
+  log "全部完成！新开一个终端，输入 grok 即可使用。"
+  log "提供商: ${PROVIDER_LABEL}（${BASE_URL}），模型: grok-4.5"
 fi
