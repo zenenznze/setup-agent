@@ -1,11 +1,11 @@
-# setup-claude-codex
+# setup-agent
 
 Linux 上一键配置 Claude Code / CodeX 的交互式脚本。
 
 ## 快速开始
 
 ```bash
-curl -O https://raw.githubusercontent.com/zenenznze/setup-claude-codex/main/setup.sh
+curl -O https://raw.githubusercontent.com/zenenznze/setup-agent/main/setup.sh
 chmod +x setup.sh
 ./setup.sh
 ```
