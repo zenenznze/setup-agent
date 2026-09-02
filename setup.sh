@@ -37,6 +37,7 @@ declare -A PROVIDER_URL
 PROVIDER_URL["deepseek:claude"]="https://api.deepseek.com/anthropic"
 PROVIDER_URL["sub2api:claude"]="https://sub2api.joe.heiyu.space"
 PROVIDER_URL["sub2api:codex"]="https://sub2api.joe.heiyu.space"
+PROVIDER_URL["cpa:codex"]="https://cliproxy.joe.heiyu.space/v1"
 PROVIDER_URL["sub2api:grok"]="https://sub2api.joe.heiyu.space/v1"
 PROVIDER_URL["tuzi:codex"]="https://api.tu-zi.com/coding"
 
@@ -210,12 +211,14 @@ else
   echo "请选择 API 提供商:"
   echo "  1) tuzi（api.tu-zi.com）"
   echo "  2) Sub2API 自建网关（sub2api.joe.heiyu.space）"
-  read -rp "输入 1-2 [1]: " PROVIDER_CHOICE
+  echo "  3) CPA（CLIProxyAPI，cliproxy.joe.heiyu.space）"
+  read -rp "输入 1-3 [1]: " PROVIDER_CHOICE
   PROVIDER_CHOICE="${PROVIDER_CHOICE:-1}"
 
   case "$PROVIDER_CHOICE" in
     1) PROVIDER="tuzi" ;;
     2) PROVIDER="sub2api" ;;
+    3) PROVIDER="cpa" ;;
     *) err "无效选择: $PROVIDER_CHOICE"; exit 1 ;;
   esac
 
@@ -231,6 +234,10 @@ else
       CODEX_EFFORT="xhigh"
       PROVIDER_LABEL="Sub2API"
       ;;
+    cpa)
+      CODEX_EFFORT="xhigh"
+      PROVIDER_LABEL="CPA（CLIProxyAPI）"
+      ;;
   esac
 fi
 
@@ -245,6 +252,8 @@ if [[ "$TOOL" == "claude" && "$PROVIDER" == "sub2api" ]]; then
   info "Sub2API 后台创建 API Key，选择 Anthropic 分组"
 elif [[ "$TOOL" == "codex" && "$PROVIDER" == "sub2api" ]]; then
   info "Sub2API 后台创建 API Key，选择 OpenAI 分组"
+elif [[ "$TOOL" == "codex" && "$PROVIDER" == "cpa" ]]; then
+  info "请在 CPA（CLIProxyAPI）后台创建可用的 API Key"
 elif [[ "$TOOL" == "grok" ]]; then
   info "Sub2API 后台创建 API Key，选择 Grok 分组"
 fi

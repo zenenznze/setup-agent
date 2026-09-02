@@ -24,6 +24,7 @@ chmod +x setup.sh
 | Claude Code | Sub2API 自建网关 | `https://sub2api.joe.heiyu.space` |
 | CodeX | tuzi | `https://api.tu-zi.com/coding` |
 | CodeX | Sub2API 自建网关 | `https://sub2api.joe.heiyu.space` |
+| CodeX | CPA（CLIProxyAPI） | `https://cliproxy.joe.heiyu.space/v1` |
 | Grok Build | Sub2API 自建网关 | `https://sub2api.joe.heiyu.space/v1` |
 
 ## 独立专项脚本
@@ -35,6 +36,7 @@ chmod +x setup.sh
 | `setup-deepseek.sh` | Claude Code → DeepSeek 直连 | `https://api.deepseek.com/anthropic` |
 | `setup-sub2api.sh` | Claude Code / CodeX / Grok Build → Sub2API | `https://sub2api.joe.heiyu.space` |
 | `setup-codex-tuzi.sh` | CodeX → tuzi | `https://api.tu-zi.com/coding` |
+| `setup-codex-cpa.sh` | CodeX → CPA（CLIProxyAPI） | `https://cliproxy.joe.heiyu.space` |
 
 ## 配置 Claude Code
 
@@ -121,6 +123,12 @@ codex exec "hello"
 
 - `base_url`: `https://sub2api.joe.heiyu.space`
 - 需要在 Sub2API 后台创建 API Key，选择 **OpenAI 分组**
+
+### CPA（CLIProxyAPI）
+
+- 请求地址：`https://cliproxy.joe.heiyu.space`
+- CodeX 配置中的 `base_url` 使用 `https://cliproxy.joe.heiyu.space/v1`，以请求 CPA 的 OpenAI Responses 端点
+- 在 CPA 后台创建可用的 API Key
 
 ## 配置 Grok Build
 
