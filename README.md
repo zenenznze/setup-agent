@@ -38,6 +38,16 @@ chmod +x setup.sh
 | `setup-codex-tuzi.sh` | CodeX → tuzi | `https://api.tu-zi.com/coding` |
 | `setup-codex-cpa.sh` | CodeX → CPA（CLIProxyAPI） | `https://cliproxy.joe.heiyu.space` |
 
+CPA 脚本支持两种调用方式：
+
+```bash
+# 手动配置：脚本会隐藏输入的 API Key
+./setup-codex-cpa.sh
+
+# 自动化配置：通过 stdin 传入，避免 API Key 出现在命令行参数和进程列表中
+printf '%s\n' "$CPA_API_KEY" | ./setup-codex-cpa.sh --api-key-stdin
+```
+
 ## 配置 Claude Code
 
 写入 `~/.claude/settings.json`，以 DeepSeek 直连为例：
@@ -129,6 +139,7 @@ codex exec "hello"
 - 请求地址：`https://cliproxy.joe.heiyu.space`
 - CodeX 配置中的 `base_url` 使用 `https://cliproxy.joe.heiyu.space/v1`，以请求 CPA 的 OpenAI Responses 端点
 - 在 CPA 后台创建可用的 API Key
+- 脚本不会接受命令行参数形式的 API Key，自动化场景请使用 `--api-key-stdin`
 
 ## 配置 Grok Build
 

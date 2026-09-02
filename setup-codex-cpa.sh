@@ -34,11 +34,19 @@ RC_FILES=(
 
 mask_secret() {
   local secret="${1:-}"
-  if (( ${#secret} <= 12 )); then
-    printf '***'
-  else
-    printf '%s...' "${secret:0:12}"
-  fi
+  printf '*** (%d characters)' "${#secret}"
+}
+
+usage() {
+  cat <<'EOF'
+用法:
+  ./setup-codex-cpa.sh                  交互式输入 API Key
+  ./setup-codex-cpa.sh --api-key-stdin  从 stdin 读取 API Key（适合自动化调用）
+  ./setup-codex-cpa.sh --help           显示帮助
+
+安全说明:
+  不要把 API Key 作为命令行参数传入，避免出现在 shell 历史或进程列表中。
+EOF
 }
 
 json_escape() {
@@ -98,9 +106,34 @@ echo " 模型: ${MODEL}"
 echo "============================================"
 echo ""
 
-info "请在 CPA（CLIProxyAPI）后台创建可用的 API Key"
-read -rsp "请输入你的 CPA API Key: " API_KEY
-echo ""
+if (( $# > 1 )); then
+  err "参数过多，请使用 --help 查看用法"
+  exit 1
+fi
+
+case "${1:-}" in
+  --help|-h)
+    usage
+    exit 0
+    ;;
+  --api-key-stdin)
+    if [[ -t 0 ]]; then
+      err "--api-key-stdin 需要通过 stdin 提供 API Key"
+      exit 1
+    fi
+    IFS= read -r API_KEY || true
+    ;;
+  "")
+    info "请在 CPA（CLIProxyAPI）后台创建可用的 API Key"
+    read -rsp "请输入你的 CPA API Key: " API_KEY
+    echo ""
+    ;;
+  *)
+    err "未知参数: $1"
+    usage
+    exit 1
+    ;;
+esac
 
 if [[ -z "$API_KEY" ]]; then
   err "API Key 不能为空"

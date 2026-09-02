@@ -43,11 +43,7 @@ PROVIDER_URL["tuzi:codex"]="https://api.tu-zi.com/coding"
 
 mask_secret() {
   local secret="${1:-}"
-  if (( ${#secret} <= 12 )); then
-    printf '***'
-  else
-    printf '%s...' "${secret:0:12}"
-  fi
+  printf '*** (%d characters)' "${#secret}"
 }
 
 json_escape() {
